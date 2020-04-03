@@ -538,7 +538,7 @@ class QuestCommand extends Command{
                break;
 		 case "dolist":
 			 $sender->sendMessage(TextFormat::colorize("&5Here are the quests you need to complete:"));
-					      $sender->sendMessage(implode(", ", $this->getPlugin()->getDatabase()->getAll())]
+					      $sender->sendMessage(implode(", ", $this->getPlugin()->getDatabase()->getAll()));
             break;
 								case "do":
 								     $quest = $args[1];
