@@ -45,7 +45,9 @@ class QuestCommand extends Command{
    }
    
    public function sendHelp(CommandSender $sender): void{
-      $sender->sendMessage($this->getPrefix()." : §fCommand");    
+      $sender->sendMessage($this->getPrefix()." : §fCommand");  
+	   $sender->sendMessage(TextFormat::colorize("&c/quest do <quest> - &5Complete the quest you'd like to do."));
+	   $sender->sendMessage(TextFormat::colorize("&c/quest dolist - &5Lists all the quest names that are on the todo list."));
       if($sender->hasPermission("quest.command.info")){
          $sender->sendMessage("§a".$this->lang->getTranslate(
             "command.info.usage"
@@ -534,7 +536,57 @@ class QuestCommand extends Command{
                   [$quest]
                ));
                break;
-            default:
+		 case "dolist":
+			 $sender->sendMessage(TextFormat::colorize("&5Here are the quests you need to complete:"));
+					      $sender->sendMessage(implode(", ", $this->getPlugin()->getDatabase()->getAll())]
+            break;
+								case "do":
+								     $quest = $args[1];
+               if(!$this->getPlugin()->getDatabase()->exists($quest)){
+                  $sender->sendMessage($this->getPrefix()." ".$this->lang->getTranslate(
+                     "command.add.error3",
+                     [$quest]
+                  ));
+                  return;
+               }
+               $playerName = strtolower($sender->getName());
+               if(QuestData::isQuestDataLimit($quest)){
+                  if(in_array($playerName, QuestData::getQuestDataLimit($quest))){
+                     $player->sendMessage($this->getPrefix()." ".$this->lang->getTranslate(
+                        "command.add.error4"
+                     ));
+                     return;
+                  }
+               }
+               $playerQuest = new PlayerQuest($sender->getName());
+               $questUtils = new QuestUtils();
+               if($playerQuest->isQuest($quest)){
+                  if($playerQuest->isQuestTrading($quest)){
+                     $item = $playerQuest->getQuestTrading($quest);
+                     if($player->getInventory()->contains($item)){
+                        $player->getInventory()->removeItem($item);
+                        QuestManager::onQuestTrading($sender, $quest);
+                     }else{
+                        $text = $this->lang->getTranslate(
+                           "command.add.error5",
+                           [$questUtils->getItemToString($item)]
+                        );
+                        $sender->sendMessage($playerQuest->getQuestInfo($quest, $text));
+                     }
+                  }else{
+                     $sender->sendMessage($playerQuest->getQuestInfo($quest));
+                  }
+                  return;
+               }
+               QuestManager::addQuest($sender, $quest);
+               $sender->sendMessage($this->getPrefix()." ".$this->lang->getTranslate(
+                  "command.add.complete1",
+                  [$sender->getName(), $quest]
+               ));
+             
+								   break;
+
+								   default:
                $this->sendHelp($sender);
                break;
          }
